@@ -185,27 +185,6 @@ Check_triangle(T& object) {
 }
 
 template<typename T>
-std::enable_if_t<is_figurelike_tuple_v<T>, void>
-Check_square(T& object) {
-	Vector<decltype(std::get<0>(object).first)> AB = {std::get<0>(object), std::get<1>(object)},
-			BC = {std::get<1>(object), std::get<2>(object)},
-			CD = {std::get<2>(object), std::get<3>(object)},
-			DA = {std::get<3>(object), std::get<0>(object)};
-	if (!is_parallel(DA, BC) || !is_parallel(AB, CD)) {
-		throw std::logic_error("Vertices must be entered clockwise or counterclockwise");
-	}
-	if (AB * BC || BC * CD || CD * DA || DA * AB) {
-		throw std::logic_error("The sides of the square should be perpendicular");
-	} 
-	if (Length(AB) != Length(BC) || Length(BC) != Length(CD) || Length(CD) != Length(DA) || Length(DA) != Length(AB)) {
-		throw std::logic_error("The sides of the square should be equal");
-	}
-	if (!Length(AB) || !Length(BC) || !Length(CD) || !Length(DA)) {
-		throw std::logic_error("The sides of the square must be greater than zero");
-	}
-}
-
-template<typename T>
 std::enable_if_t<is_figurelike_tuple_v<T>, bool>
 Check_rectangle(T& object) {
 	Vector<decltype(std::get<0>(object).first)> AB = {std::get<0>(object), std::get<1>(object)},
@@ -232,9 +211,7 @@ Check(T& object) {
 		Check_triangle(object);
 	}
 	else if (std::tuple_size_v<T> == 4) {
-		if (Check_rectangle(object)) {
-			Check_square(object);
-		}
+		Check_rectangle(object);
 	}
 }
 
