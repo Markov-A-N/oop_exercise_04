@@ -68,8 +68,7 @@ int main() {
 									vertex_t<double>>>();
 			}
 			else if (object_type == "Square") {
-				process<std::tuple<vertex_t<double>, vertex_t<double>,
-									vertex_t<double>, vertex_t<double>>>();
+				process<std::tuple<vertex_t<double>, vertex_t<double>>>();
 			}
 			else if (object_type == "Rectangle") {
 				process<std::tuple<vertex_t<double>, vertex_t<double>,

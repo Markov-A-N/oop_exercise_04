@@ -93,6 +93,11 @@ Read(std::istream &is, T& object) {
 	return Read(is, object);
 }
 
+template<typename T>
+double area_square(const T& tuple) {
+	return 0.5 * Length(std::get<0>(tuple), std::get<1>(tuple)) * Length(std::get<0>(tuple), std::get<1>(tuple));
+}
+
 template<size_t Id, typename T>
 double compute_area(const T &tuple) {
 	if constexpr(Id >= std::tuple_size_v<T>) {
@@ -111,11 +116,28 @@ double compute_area(const T &tuple) {
 template<typename T>
 std::enable_if_t<is_figurelike_tuple_v<T>, double>
 Area(const T& object) {
-	if constexpr (std::tuple_size_v<T> < 3){
-		return 0;
+	if constexpr (std::tuple_size_v<T> == 2){
+		return area_square(object);
 	}
 	else{
 		return compute_area<2>(object);
+	}
+}
+
+template<typename T>
+vertex_t<double> center_square(const T& object) {
+	decltype(std::get<0>(object).first) cord;
+	if (std::get<1>(object).first - std::get<0>(object).first != 0 && std::get<1>(object).second - std::get<0>(object).second != 0) {
+		cord = (std::get<1>(object).first - std::get<0>(object).first) / 2;
+		return std::make_pair(cord, cord);
+	}
+	else if (std::get<0>(object).second - std::get<1>(object).second == 0) {
+		cord = (std::get<1>(object).first - std::get<0>(object).first) / 2;
+		return std::make_pair(cord, std::get<0>(object).second);
+	}
+	else {
+		cord = (std::get<1>(object).second - std::get<0>(object).second) / 2;
+		return std::make_pair(std::get<0>(object).first, cord);
 	}
 }
 
@@ -153,7 +175,30 @@ vertex_t<double> compute_center(const T &tuple) {
 template<typename T>
 std::enable_if_t<is_figurelike_tuple_v<T>, vertex_t<double>>
 Center(const T& object) {
-	return compute_center<0>(object);
+	if constexpr (std::tuple_size_v<T> != 2) {
+		return compute_center<0>(object);
+	}
+	else {
+		return center_square(object);
+	}
+}
+
+template<typename T>
+void print_square(std::ostream &os, const T &tuple) {
+	if ((std::get<1>(tuple).second - std::get<0>(tuple).second != 0) && ((std::get<0>(tuple).first - std::get<1>(tuple).first) != 0)) {
+		os << std::get<0>(tuple) << " " << std::make_pair(std::get<0>(tuple).first, std::get<0>(tuple).second + (std::get<1>(tuple).second - std::get<0>(tuple).second)) << " ";
+		os << std::get<1>(tuple) << " " << std::make_pair(std::get<1>(tuple).first, std::get<1>(tuple).second + (std::get<0>(tuple).second - std::get<1>(tuple).second));
+	} else if (std::get<0>(tuple).second - std::get<1>(tuple).second == 0) {
+		os << std::get<0>(tuple) << " " << std::make_pair(std::get<0>(tuple).first + (std::get<1>(tuple).first - std::get<0>(tuple).first) / 2, 
+														std::get<0>(tuple).second + (std::get<1>(tuple).first - std::get<0>(tuple).first)  / 2) << " ";
+		os << std::get<1>(tuple) << " " << std::make_pair(std::get<0>(tuple).first + (std::get<1>(tuple).first - std::get<0>(tuple).first) / 2, 
+														std::get<0>(tuple).second - (std::get<1>(tuple).first - std::get<0>(tuple).first) / 2) << " ";
+	} else if ((std::get<0>(tuple).first - std::get<1>(tuple).first) == 0) {
+		os << std::get<0>(tuple) << " " << std::make_pair(std::get<0>(tuple).first - (std::get<1>(tuple).second - std::get<0>(tuple).second) / 2, 
+														std::get<0>(tuple).second + (std::get<1>(tuple).second - std::get<0>(tuple).second) / 2) << " ";
+		os << std::get<1>(tuple) << " " << std::make_pair(std::get<0>(tuple).first + (std::get<1>(tuple).second - std::get<0>(tuple).second) / 2, 
+														std::get<0>(tuple).second + (std::get<1>(tuple).second - std::get<0>(tuple).second) / 2) << " ";
+	}
 }
 
 template<size_t Id, typename T>
@@ -170,7 +215,12 @@ void recursive_print(std::ostream &os, const T &tuple) {
 template<typename T>
 std::enable_if_t<is_figurelike_tuple_v<T>, void>
 Print(std::ostream &os, const T& object) {
-	recursive_print<0>(os, object);
+	if constexpr (std::tuple_size_v<T> != 2) {
+		recursive_print<0>(os, object);
+	}
+	else {
+		print_square(os, object);
+	}
 }
 
 template<typename T>
@@ -185,7 +235,7 @@ Check_triangle(T& object) {
 }
 
 template<typename T>
-std::enable_if_t<is_figurelike_tuple_v<T>, bool>
+std::enable_if_t<is_figurelike_tuple_v<T>, void>
 Check_rectangle(T& object) {
 	Vector<decltype(std::get<0>(object).first)> AB = {std::get<0>(object), std::get<1>(object)},
 			BC = {std::get<1>(object), std::get<2>(object)},
@@ -200,14 +250,23 @@ Check_rectangle(T& object) {
 	if (!Length(AB) || !Length(BC) || !Length(CD) || !Length(DA)) {
 		throw std::logic_error("The sides must be greater than zero");
 	}
+}
 
-	return true;
+template<typename T>
+std::enable_if_t<is_figurelike_tuple_v<T>, void>
+Check_square(T& object) {
+	if (std::get<0>(object).first == std::get<1>(object).first && std::get<0>(object).second == std::get<1>(object).second) {
+		throw std::logic_error("Vertices must not match");
+	}
 }
 
 template<typename T>
 std::enable_if_t<is_figurelike_tuple_v<T>, void>
 Check(T& object) {
-	if constexpr (std::tuple_size_v<T> == 3) {
+	if constexpr(std::tuple_size_v<T> == 2) {
+		Check_square(object);
+	}
+	else if constexpr (std::tuple_size_v<T> == 3) {
 		Check_triangle(object);
 	}
 	else if (std::tuple_size_v<T> == 4) {
