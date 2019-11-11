@@ -164,12 +164,7 @@ double recursive_center_y(const T &tuple) {
 
 template<size_t Id, typename T>
 vertex_t<double> compute_center(const T &tuple) {
-	if constexpr (Id >= std::tuple_size_v<T>) {
-		return 0;
-	}
-	else {
-		return {recursive_center_x<Id>(tuple), recursive_center_y<Id>(tuple)} ;
-	}
+	return {recursive_center_x<Id>(tuple), recursive_center_y<Id>(tuple)} ;
 }
 
 template<typename T>
